@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\exploded-aar\com.android.support\support-v4\23.0.0\jars\classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="8413c27b45b7fe61dca4a98159f65e2cee215f5a">
+        <dex dex="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\pre-dexed\debug\classes-e5f79a38476f007658b7f1bfa7a6f9b5b1f6d098.jar" />
+    </item>
+    <item
+        jar="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\exploded-aar\com.android.support\gridlayout-v7\23.0.0\jars\classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="1618fd467fb5971c394741e8976ededb97aaee0a">
+        <dex dex="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\pre-dexed\debug\classes-08a283dfbae773182161db9a67baaa2fb75255ad.jar" />
+    </item>
+    <item
+        jar="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\exploded-aar\com.android.support\support-v4\23.0.0\jars\libs\internal_impl-23.0.0.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="8bd336eeae661e8311330284897ee07f8ebaa297">
+        <dex dex="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\pre-dexed\debug\internal_impl-23.0.0-155ea6cb92eae12ccf934efd5f798d363eccf0ee.jar" />
+    </item>
+    <item
+        jar="C:\Android\sdk\extras\android\m2repository\com\android\support\support-annotations\23.0.0\support-annotations-23.0.0.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="990e7f98a7bad86a40b1f0bcfeb039023afd0839">
+        <dex dex="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\pre-dexed\debug\support-annotations-23.0.0-3f77e93e5ed0a0d7276beffe8309c2818d2dc483.jar" />
+    </item>
+    <item
+        jar="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\exploded-aar\com.android.support\cardview-v7\23.0.0\jars\classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="1ccbc26be2c465c622a48310e8092241b01abe80">
+        <dex dex="D:\arduino-1.6.5-r5-windows\BluetoothChat\Application\build\intermediates\pre-dexed\debug\classes-0960237183e6cb2b5f7ab110e41e02f4d14dbc64.jar" />
+    </item>
+
+</items>
