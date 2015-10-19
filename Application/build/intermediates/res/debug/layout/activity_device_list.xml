@@ -64,4 +64,4 @@
         android:text="@string/button_scan"
         />
 </LinearLayout>
-<!-- From: file:/D:/arduino-1.6.5-r5-windows/BluetoothCar/Application/src/main/res/layout/activity_device_list.xml -->
+<!-- From: file:/media/felix/work/workspace/sample/BluetoothCar/Application/src/main/res/layout/activity_device_list.xml -->
