@@ -21,46 +21,39 @@
 
     <Button
         android:id="@+id/button_up"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:text="FRONT"
+        android:layout_width="150dp"
+        android:layout_height="300dp"
+        android:text="MOVE"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
-
-    <Button
-        android:id="@+id/button_left"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:text="LEFT"
-        android:layout_below="@+id/button_up"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
-
-    <Button
-        android:id="@+id/button_back"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:text="BACK"
-        android:layout_below="@+id/button_left"
-        android:layout_centerHorizontal="true" />
-
-    <Button
-        android:id="@+id/button_right"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:text="RIGHT"
-        android:layout_below="@+id/button_up"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
     <Button
+        android:id="@+id/button_left"
+        android:layout_width="150dp"
+        android:layout_height="100dp"
+        android:text="LEFT"
+        android:layout_below="@+id/button_right"
+        android:layout_alignLeft="@+id/button_right"
+        android:layout_alignStart="@+id/button_right" />
+
+    <Button
+        android:id="@+id/button_right"
+        android:layout_width="150dp"
+        android:layout_height="100dp"
+        android:text="RIGHT"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
         android:id="@+id/button_stop"
-        android:layout_width="200dp"
+        android:layout_width="150dp"
         android:layout_height="100dp"
         android:text="STOP"
-        android:layout_below="@+id/button_back"
-        android:layout_alignRight="@+id/button_back"
-        android:layout_alignEnd="@+id/button_back" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignLeft="@+id/button_left"
+        android:layout_alignStart="@+id/button_left" />
 
 </RelativeLayout>
 <!-- From: file:/media/felix/work/workspace/sample/BluetoothCar/Application/src/main/res/layout/fragment_bluetooth_chat.xml -->

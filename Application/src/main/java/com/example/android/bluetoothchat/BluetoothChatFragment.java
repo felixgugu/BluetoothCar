@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -121,34 +122,20 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         mUpButton = (Button) view.findViewById(R.id.button_up);
-        mBackButton = (Button) view.findViewById(R.id.button_back);
         mLeftButton = (Button) view.findViewById(R.id.button_left);
         mRightButton = (Button) view.findViewById(R.id.button_right);
         mStopButton = (Button) view.findViewById(R.id.button_stop);
+
+        Log.d("test", "mUpButton.getHeight():" + mUpButton.getHeight());
     }
 
 
+    String message = "";
+
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         public void onClick(View v) {
-            String message = "";
 
-            if (v.getId() == R.id.button_up) {
-
-                message = "f,150";
-
-            } else if (v.getId() == R.id.button_back) {
-
-                message = "b,150";
-
-            } else if (v.getId() == R.id.button_right) {
-
-                message = "a,45";
-
-            } else if (v.getId() == R.id.button_left) {
-
-                message = "a,135";
-
-            } else if (v.getId() == R.id.button_stop) {
+            if (v.getId() == R.id.button_stop) {
 
                 message = "x,0";
             }
@@ -156,7 +143,6 @@ public class BluetoothChatFragment extends Fragment {
             sendMessage(message);
         }
     };
-
 
     /**
      * Set up the UI and background operations for chat.
@@ -166,9 +152,92 @@ public class BluetoothChatFragment extends Fragment {
 
         // Initialize the send button with a listener that for click events
         mUpButton.setOnClickListener(onClickListener);
-        mBackButton.setOnClickListener(onClickListener);
-        mLeftButton.setOnClickListener(onClickListener);
-        mRightButton.setOnClickListener(onClickListener);
+
+        int moveButtonHeight = UnitUtil.dp2px(getContext(), 300);
+        final int centerVal = moveButtonHeight / 2;
+
+        Log.d("test", "moveButtonHeight:" + moveButtonHeight);
+        Log.d("test", "centerVal:" + centerVal);
+
+
+        mUpButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                String tmpMessage = "";
+
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    tmpMessage = "f,150";
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    tmpMessage = "x,0";
+                }
+
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    //Log.d("test", "Y:" + event.getY());
+
+                    if (event.getY() < centerVal) {
+                        tmpMessage = "f,150";
+                    } else {
+                        tmpMessage = "b,150";
+                    }
+                }
+
+                if (!tmpMessage.equals("") && !tmpMessage.equals(message)) {
+
+                    Log.d("test", "move:" + tmpMessage);
+
+                    message = tmpMessage;
+                    sendMessage(tmpMessage);
+                }
+
+                return false;
+            }
+        });
+
+        mRightButton.setOnTouchListener(new View.OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                String tmpMessage = "";
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    tmpMessage = "r,0";
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    tmpMessage = "x,0";
+                }
+
+                if (!tmpMessage.equals("") && !tmpMessage.equals(message)) {
+                    Log.d("test", "move:" + tmpMessage);
+                    message = tmpMessage;
+                    sendMessage(tmpMessage);
+                }
+
+                return false;
+            }
+        });
+
+        mLeftButton.setOnTouchListener(new View.OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                String tmpMessage = "";
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    tmpMessage = "l,0";
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    tmpMessage = "x,0";
+                }
+
+                if (!tmpMessage.equals("") && !tmpMessage.equals(message)) {
+                    Log.d("test", "move:" + tmpMessage);
+                    message = tmpMessage;
+                    sendMessage(tmpMessage);
+                }
+
+                return false;
+            }
+        });
+
         mStopButton.setOnClickListener(onClickListener);
 
         // Initialize the BluetoothChatService to perform bluetooth connections
@@ -182,6 +251,8 @@ public class BluetoothChatFragment extends Fragment {
      * @param message A string of text to send.
      */
     private void sendMessage(String message) {
+
+        Log.d("test", "send:" + message);
         // Check that we're actually connected before trying anything
         if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
             Toast.makeText(getActivity(), R.string.not_connected, Toast.LENGTH_SHORT).show();
@@ -190,14 +261,13 @@ public class BluetoothChatFragment extends Fragment {
 
         // Check that there's actually something to send
         if (message.length() > 0) {
-            // Get the message bytes and tell the BluetoothChatService to write
 
-            Log.d("test", "send:" + message);
-
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             byte[] send = (message).getBytes();
-
-            Log.d("test", Arrays.toString(send));
-
             mChatService.write(send);
         }
     }
@@ -346,12 +416,12 @@ public class BluetoothChatFragment extends Fragment {
                 startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
                 return true;
             }
-            case R.id.insecure_connect_scan: {
-                // Launch the DeviceListActivity to see devices and do scan
-                Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
-                return true;
-            }
+//            case R.id.insecure_connect_scan: {
+//                // Launch the DeviceListActivity to see devices and do scan
+//                Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
+//                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
+//                return true;
+//            }
 
         }
         return false;
