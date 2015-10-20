@@ -19,11 +19,8 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Toast;
-
-import java.util.Arrays;
 
 /**
  * This fragment controls Bluetooth to communicate with other devices.
@@ -130,19 +127,9 @@ public class BluetoothChatFragment extends Fragment {
     }
 
 
-    String message = "";
+    private String lastCmd;//最後送出的指令
 
-    private View.OnClickListener onClickListener = new View.OnClickListener() {
-        public void onClick(View v) {
-
-            if (v.getId() == R.id.button_stop) {
-
-                message = "x,0";
-            }
-
-            sendMessage(message);
-        }
-    };
+    private boolean isMove = false;
 
     /**
      * Set up the UI and background operations for chat.
@@ -150,44 +137,35 @@ public class BluetoothChatFragment extends Fragment {
     private void setupChat() {
         Log.d(TAG, "setupChat()");
 
-        // Initialize the send button with a listener that for click events
-        mUpButton.setOnClickListener(onClickListener);
 
+        //範圍
         int moveButtonHeight = UnitUtil.dp2px(getContext(), 300);
-        final int centerVal = moveButtonHeight / 2;
+        final int centerVal = moveButtonHeight / 2; //小於此值等於前進，大於反之
 
         Log.d("test", "moveButtonHeight:" + moveButtonHeight);
         Log.d("test", "centerVal:" + centerVal);
 
 
+        //控制前進後退
         mUpButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
-                String tmpMessage = "";
 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    tmpMessage = "f,150";
+                    isMove = true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    tmpMessage = "x,0";
+                    isMove = false;
+                    sendMessage("x,0");
                 }
 
-                if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                    //Log.d("test", "Y:" + event.getY());
-
+                if (isMove && event.getAction() == MotionEvent.ACTION_MOVE) {
                     if (event.getY() < centerVal) {
-                        tmpMessage = "f,150";
+                        sendMessage("f,150");
                     } else {
-                        tmpMessage = "b,150";
+
+                        sendMessage("b,150");
                     }
-                }
-
-                if (!tmpMessage.equals("") && !tmpMessage.equals(message)) {
-
-                    Log.d("test", "move:" + tmpMessage);
-
-                    message = tmpMessage;
-                    sendMessage(tmpMessage);
                 }
 
                 return false;
@@ -199,17 +177,12 @@ public class BluetoothChatFragment extends Fragment {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
-                String tmpMessage = "";
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    tmpMessage = "r,0";
+                    isMove = false;
+                    sendMessage("r,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    tmpMessage = "x,0";
-                }
-
-                if (!tmpMessage.equals("") && !tmpMessage.equals(message)) {
-                    Log.d("test", "move:" + tmpMessage);
-                    message = tmpMessage;
-                    sendMessage(tmpMessage);
+                    sendMessage("x,0");
+                    isMove = true;
                 }
 
                 return false;
@@ -221,53 +194,53 @@ public class BluetoothChatFragment extends Fragment {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
-                String tmpMessage = "";
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    tmpMessage = "l,0";
+                    isMove = false;
+                    sendMessage("l,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    tmpMessage = "x,0";
-                }
-
-                if (!tmpMessage.equals("") && !tmpMessage.equals(message)) {
-                    Log.d("test", "move:" + tmpMessage);
-                    message = tmpMessage;
-                    sendMessage(tmpMessage);
+                    sendMessage("x,0");
+                    isMove = true;
                 }
 
                 return false;
             }
         });
 
-        mStopButton.setOnClickListener(onClickListener);
+        mStopButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (v.getId() == R.id.button_stop) {
+                    sendMessage("x,0");
+                }
+            }
+        });
 
         // Initialize the BluetoothChatService to perform bluetooth connections
         mChatService = new BluetoothChatService(getActivity(), mHandler);
-
     }
 
     /**
-     * Sends a message.
+     * Sends a lastCmd.
      *
-     * @param message A string of text to send.
+     * @param cmd A string of text to send.
      */
-    private void sendMessage(String message) {
+    private void sendMessage(String cmd) {
 
-        Log.d("test", "send:" + message);
-        // Check that we're actually connected before trying anything
+
+        if (cmd.equals(lastCmd)) {
+            return;
+        }
+
+        Log.d("test", "send:" + cmd);
+
+        lastCmd = cmd;
+
         if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
             Toast.makeText(getActivity(), R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Check that there's actually something to send
-        if (message.length() > 0) {
-
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            byte[] send = (message).getBytes();
+        if (cmd.length() > 0) {
+            byte[] send = (cmd).getBytes();
             mChatService.write(send);
         }
     }
