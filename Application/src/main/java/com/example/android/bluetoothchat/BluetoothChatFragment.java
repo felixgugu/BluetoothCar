@@ -222,14 +222,14 @@ public class BluetoothChatFragment extends Fragment {
      *
      * @param cmd A string of text to send.
      */
-    private void sendMessage(String cmd) {
+    private synchronized void sendMessage(String cmd) {
 
 
         if (cmd.equals(lastCmd)) {
             return;
         }
 
-        Log.d("test", "send:" + cmd);
+        Log.v("test", "send1:" + cmd);
 
         lastCmd = cmd;
 
@@ -239,6 +239,7 @@ public class BluetoothChatFragment extends Fragment {
         }
 
         if (cmd.length() > 0) {
+            Log.d("test", "send2:" + cmd);
             byte[] send = (cmd).getBytes();
             mChatService.write(send);
         }
