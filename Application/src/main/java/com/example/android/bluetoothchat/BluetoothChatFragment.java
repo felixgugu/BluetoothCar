@@ -163,7 +163,6 @@ public class BluetoothChatFragment extends Fragment {
                     if (event.getY() < centerVal) {
                         sendMessage("f,150");
                     } else {
-
                         sendMessage("b,150");
                     }
                 }
@@ -181,7 +180,7 @@ public class BluetoothChatFragment extends Fragment {
                     isMove = false;
                     sendMessage("r,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    sendMessage("x,0");
+                    //sendMessage("x,0");
                     isMove = true;
                 }
 
@@ -198,7 +197,7 @@ public class BluetoothChatFragment extends Fragment {
                     isMove = false;
                     sendMessage("l,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    sendMessage("x,0");
+                    //sendMessage("x,0");
                     isMove = true;
                 }
 
