@@ -18,7 +18,6 @@ package com.example.android.bluetoothchat;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
@@ -37,9 +36,9 @@ import java.util.UUID;
  * incoming connections, a thread for connecting with a device, and a
  * thread for performing data transmissions when connected.
  */
-public class BluetoothChatService {
+public class BluetoothService {
     // Debugging
-    private static final String TAG = "BluetoothChatService";
+    private static final String TAG = "BluetoothService";
 
     // Name for the SDP record when creating server socket
     private static final String NAME_SECURE = "BluetoothChatSecure";
@@ -71,7 +70,7 @@ public class BluetoothChatService {
      * @param context The UI Activity Context
      * @param handler A Handler to send messages back to the UI Activity
      */
-    public BluetoothChatService(Context context, Handler handler) {
+    public BluetoothService(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
@@ -228,12 +227,12 @@ public class BluetoothChatService {
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString(Constants.TOAST, "Unable to connect device");
+        bundle.putString(Constants.TOAST, "無法連線");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
-        BluetoothChatService.this.start();
+        BluetoothService.this.start();
     }
 
     /**
@@ -243,15 +242,13 @@ public class BluetoothChatService {
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString(Constants.TOAST, "Device connection was lost");
+        bundle.putString(Constants.TOAST, "失去連線");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
-        BluetoothChatService.this.start();
+        BluetoothService.this.start();
     }
-
-
 
 
     /**
@@ -285,6 +282,8 @@ public class BluetoothChatService {
             mmSocket = tmp;
         }
 
+        private int retry = 0;
+
         public void run() {
             Log.i(TAG, "BEGIN mConnectThread SocketType:" + mSocketType);
             setName("ConnectThread" + mSocketType);
@@ -292,11 +291,13 @@ public class BluetoothChatService {
             // Always cancel discovery because it will slow down a connection
             mAdapter.cancelDiscovery();
 
+
             // Make a connection to the BluetoothSocket
             try {
                 // This is a blocking call and will only return on a
                 // successful connection or an exception
                 mmSocket.connect();
+                retry = 0;
             } catch (IOException e) {
                 // Close the socket
 
@@ -308,12 +309,34 @@ public class BluetoothChatService {
                     Log.e(TAG, "unable to close() " + mSocketType +
                             " socket during connection failure", e2);
                 }
+
+                try {
+
+                    if (retry < 3) {
+                        retry++;
+                        Thread.sleep(1000);
+
+                        Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
+                        Bundle bundle = new Bundle();
+                        bundle.putString(Constants.TOAST, "連線失敗，重試第"+retry+"次");
+                        msg.setData(bundle);
+                        mHandler.sendMessage(msg);
+
+
+                        run();
+                    }
+
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+
+                retry = 0;
                 connectionFailed();
                 return;
             }
 
             // Reset the ConnectThread because we're done
-            synchronized (BluetoothChatService.this) {
+            synchronized (BluetoothService.this) {
                 mConnectThread = null;
             }
 
@@ -375,7 +398,7 @@ public class BluetoothChatService {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
                     // Start the service over to restart listening mode
-                    BluetoothChatService.this.start();
+                    BluetoothService.this.start();
                     break;
                 }
             }

@@ -22,9 +22,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-/**
- * This fragment controls Bluetooth to communicate with other devices.
- */
+
 public class BluetoothChatFragment extends Fragment {
 
     private static final String TAG = "BluetoothChatFragment";
@@ -36,37 +34,44 @@ public class BluetoothChatFragment extends Fragment {
 
     // Layout Views
     private Button mUpButton;
-    private Button mBackButton;
     private Button mRightButton;
     private Button mLeftButton;
     private Button mStopButton;
 
     /**
-     * Name of the connected device
+     * 已連線設備名稱
      */
     private String mConnectedDeviceName = null;
 
     /**
-     * Local Bluetooth adapter
+     * 藍芽設備
      */
     private BluetoothAdapter mBluetoothAdapter = null;
 
+
     /**
-     * Member object for the chat services
+     * 藍芽服務
      */
-    private BluetoothChatService mChatService = null;
+    private BluetoothService mChatService = null;
+
+
+
+    private String lastCmd;//最後送出的指令
+
+    private boolean isMove = false;//是否正在移動(前進、後退)
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        // Get local Bluetooth adapter
+
+        // 取得藍芽設備
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        // If the adapter is null, then Bluetooth is not supported
+        // 沒有藍芽
         if (mBluetoothAdapter == null) {
             FragmentActivity activity = getActivity();
-            Toast.makeText(activity, "Bluetooth is not available", Toast.LENGTH_LONG).show();
+            Toast.makeText(activity, "您的手機不支援藍芽", Toast.LENGTH_LONG).show();
             activity.finish();
         }
     }
@@ -75,12 +80,10 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        // If BT is not on, request that it be enabled.
-        // setupChat() will then be called during onActivityResult
+        // 藍芽未開啟，請使用者打開
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-            // Otherwise, setup the chat session
         } else if (mChatService == null) {
             setupChat();
         }
@@ -103,7 +106,7 @@ public class BluetoothChatFragment extends Fragment {
         // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
         if (mChatService != null) {
             // Only if the state is STATE_NONE, do we know that we haven't started already
-            if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
+            if (mChatService.getState() == BluetoothService.STATE_NONE) {
                 // Start the Bluetooth chat services
                 mChatService.start();
             }
@@ -118,18 +121,13 @@ public class BluetoothChatFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+
         mUpButton = (Button) view.findViewById(R.id.button_up);
         mLeftButton = (Button) view.findViewById(R.id.button_left);
         mRightButton = (Button) view.findViewById(R.id.button_right);
         mStopButton = (Button) view.findViewById(R.id.button_stop);
-
-        Log.d("test", "mUpButton.getHeight():" + mUpButton.getHeight());
     }
 
-
-    private String lastCmd;//最後送出的指令
-
-    private boolean isMove = false;
 
     /**
      * Set up the UI and background operations for chat.
@@ -145,25 +143,23 @@ public class BluetoothChatFragment extends Fragment {
         Log.d("test", "moveButtonHeight:" + moveButtonHeight);
         Log.d("test", "centerVal:" + centerVal);
 
-
         //控制前進後退
         mUpButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
-
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     isMove = true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     isMove = false;
-                    sendMessage("x,0");
+                    sendCommand("x,0");
                 }
 
                 if (isMove && event.getAction() == MotionEvent.ACTION_MOVE) {
                     if (event.getY() < centerVal) {
-                        sendMessage("f,150");
+                        sendCommand("f,150");
                     } else {
-                        sendMessage("b,150");
+                        sendCommand("b,150");
                     }
                 }
 
@@ -178,9 +174,9 @@ public class BluetoothChatFragment extends Fragment {
 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     isMove = false;
-                    sendMessage("r,0");
+                    sendCommand("r,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    //sendMessage("x,0");
+                    //sendCommand("x,0");
                     isMove = true;
                 }
 
@@ -195,9 +191,9 @@ public class BluetoothChatFragment extends Fragment {
 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     isMove = false;
-                    sendMessage("l,0");
+                    sendCommand("l,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    //sendMessage("x,0");
+                    //sendCommand("x,0");
                     isMove = true;
                 }
 
@@ -208,23 +204,23 @@ public class BluetoothChatFragment extends Fragment {
         mStopButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (v.getId() == R.id.button_stop) {
-                    sendMessage("x,0");
+                    sendCommand("x,0");
                 }
             }
         });
 
-        // Initialize the BluetoothChatService to perform bluetooth connections
-        mChatService = new BluetoothChatService(getActivity(), mHandler);
+        // Initialize the BluetoothService to perform bluetooth connections
+        mChatService = new BluetoothService(getActivity(), mHandler);
     }
 
     /**
-     * Sends a lastCmd.
-     *
-     * @param cmd A string of text to send.
+     * 送出指令
+     * @param cmd
      */
-    private void sendMessage(String cmd) {
+    private void sendCommand(String cmd) {
 
 
+        // 指令重覆退回不執行(touch時會持續發出相同的指令)
         if (cmd.equals(lastCmd)) {
             return;
         }
@@ -233,7 +229,7 @@ public class BluetoothChatFragment extends Fragment {
 
         lastCmd = cmd;
 
-        if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
+        if (mChatService.getState() != BluetoothService.STATE_CONNECTED) {
             Toast.makeText(getActivity(), R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -280,7 +276,7 @@ public class BluetoothChatFragment extends Fragment {
     }
 
     /**
-     * The Handler that gets information back from the BluetoothChatService
+     * The Handler that gets information back from the BluetoothService
      */
     private final Handler mHandler = new Handler() {
         @Override
@@ -289,14 +285,14 @@ public class BluetoothChatFragment extends Fragment {
             switch (msg.what) {
                 case Constants.MESSAGE_STATE_CHANGE:
                     switch (msg.arg1) {
-                        case BluetoothChatService.STATE_CONNECTED:
+                        case BluetoothService.STATE_CONNECTED:
                             setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
                             break;
-                        case BluetoothChatService.STATE_CONNECTING:
+                        case BluetoothService.STATE_CONNECTING:
                             setStatus(R.string.title_connecting);
                             break;
-                        case BluetoothChatService.STATE_LISTEN:
-                        case BluetoothChatService.STATE_NONE:
+                        case BluetoothService.STATE_LISTEN:
+                        case BluetoothService.STATE_NONE:
                             setStatus(R.string.title_not_connected);
                             break;
                     }
@@ -316,6 +312,7 @@ public class BluetoothChatFragment extends Fragment {
                                 + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
                     }
                     break;
+
                 case Constants.MESSAGE_TOAST:
                     if (null != activity) {
 
