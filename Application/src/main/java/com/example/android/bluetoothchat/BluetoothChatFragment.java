@@ -176,7 +176,7 @@ public class BluetoothChatFragment extends Fragment {
                     isMove = false;
                     sendCommand("r,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    //sendCommand("x,0");
+                    sendCommand("a,90");
                     isMove = true;
                 }
 
@@ -193,7 +193,7 @@ public class BluetoothChatFragment extends Fragment {
                     isMove = false;
                     sendCommand("l,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    //sendCommand("x,0");
+                    sendCommand("a,90");
                     isMove = true;
                 }
 
