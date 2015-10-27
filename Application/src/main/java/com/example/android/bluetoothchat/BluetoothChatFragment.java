@@ -11,7 +11,12 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.Spanned;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,6 +25,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -37,6 +44,9 @@ public class BluetoothChatFragment extends Fragment {
     private Button mRightButton;
     private Button mLeftButton;
     private Button mStopButton;
+    private EditText mMotoSpeedText;
+
+    private int mMotoSpeed = 200;
 
     /**
      * 已連線設備名稱
@@ -55,7 +65,6 @@ public class BluetoothChatFragment extends Fragment {
     private BluetoothService mChatService = null;
 
 
-
     private String lastCmd;//最後送出的指令
 
     private boolean isMove = false;//是否正在移動(前進、後退)
@@ -64,6 +73,8 @@ public class BluetoothChatFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        //getActionBar().setLogo(R.drawable.lego_icon_24);
 
         // 取得藍芽設備
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -126,6 +137,7 @@ public class BluetoothChatFragment extends Fragment {
         mLeftButton = (Button) view.findViewById(R.id.button_left);
         mRightButton = (Button) view.findViewById(R.id.button_right);
         mStopButton = (Button) view.findViewById(R.id.button_stop);
+        mMotoSpeedText = (EditText) view.findViewById(R.id.moto_speed);
     }
 
 
@@ -152,14 +164,14 @@ public class BluetoothChatFragment extends Fragment {
                     isMove = true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     isMove = false;
-                    sendCommand("x,0");
+                    sendCommand("x,0");//停車
                 }
 
                 if (isMove && event.getAction() == MotionEvent.ACTION_MOVE) {
                     if (event.getY() < centerVal) {
-                        sendCommand("f,150");
+                        sendCommand("f," + mMotoSpeed);
                     } else {
-                        sendCommand("b,150");
+                        sendCommand("b," + mMotoSpeed);
                     }
                 }
 
@@ -176,7 +188,7 @@ public class BluetoothChatFragment extends Fragment {
                     isMove = false;
                     sendCommand("r,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    sendCommand("a,90");
+                    sendCommand("a,90");//轉回中間
                     isMove = true;
                 }
 
@@ -193,7 +205,7 @@ public class BluetoothChatFragment extends Fragment {
                     isMove = false;
                     sendCommand("l,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    sendCommand("a,90");
+                    sendCommand("a,90");//轉回中間
                     isMove = true;
                 }
 
@@ -204,17 +216,42 @@ public class BluetoothChatFragment extends Fragment {
         mStopButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (v.getId() == R.id.button_stop) {
-                    sendCommand("x,0");
+                    sendCommand("x,0");//停車
                 }
             }
         });
 
         // Initialize the BluetoothService to perform bluetooth connections
         mChatService = new BluetoothService(getActivity(), mHandler);
+
+        //
+        mMotoSpeedText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                try {
+                    int speed = Integer.parseInt(v.getText().toString());
+                    Log.d("test", "speed:" + speed);
+                    if (speed > 0 && speed < 250) {
+                        mMotoSpeed = speed;
+                    } else {
+                        mMotoSpeed = 200;
+                    }
+                } catch (Exception e) {
+                    mMotoSpeed = 200;
+                    Log.e("test", "error", e);
+                }
+
+                mMotoSpeedText.setText(mMotoSpeed + "");
+
+                return false;
+            }
+        });
+
     }
 
     /**
      * 送出指令
+     *
      * @param cmd
      */
     private void sendCommand(String cmd) {
