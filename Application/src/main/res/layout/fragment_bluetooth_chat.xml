@@ -12,25 +12,30 @@
         android:text="MOVE"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:background="@drawable/vote_up_down" />
 
     <Button
         android:id="@+id/button_left"
-        android:layout_width="150dp"
-        android:layout_height="100dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:text="LEFT"
-        android:layout_below="@+id/button_right"
-        android:layout_alignLeft="@+id/button_right"
-        android:layout_alignStart="@+id/button_right" />
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@+id/button_right"
+        android:layout_toStartOf="@+id/button_right"
+        android:background="@drawable/control_left_right"
+        android:textSize="20dp" />
 
     <Button
         android:id="@+id/button_right"
-        android:layout_width="150dp"
-        android:layout_height="100dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:text="RIGHT"
-        android:layout_alignParentTop="true"
+        android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:background="@drawable/control_left_right"
+        android:textSize="20dp" />
 
     <Button
         android:id="@+id/button_stop"
@@ -38,7 +43,19 @@
         android:layout_height="100dp"
         android:text="STOP"
         android:layout_alignParentBottom="true"
-        android:layout_alignLeft="@+id/button_left"
-        android:layout_alignStart="@+id/button_left" />
+        android:layout_toRightOf="@+id/button_left"
+        android:layout_toEndOf="@+id/button_left"
+        android:textSize="20dp" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/button_up"
+        android:layout_alignBottom="@+id/button_up"
+        android:layout_toLeftOf="@+id/button_left"
+        android:layout_toStartOf="@+id/button_left"
+        android:src="@drawable/image" />
 
 </RelativeLayout>
