@@ -5,26 +5,21 @@
     android:orientation="vertical">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:id="@+id/imageView"
-        android:src="@drawable/image"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/button_up"
-        android:layout_toLeftOf="@+id/button_left"
-        android:layout_toStartOf="@+id/button_left"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp" />
+        android:src="@drawable/image"/>
 
     <Button
         android:id="@+id/button_up"
         android:layout_width="100dp"
         android:layout_height="200dp"
         android:text="MOVE"
-        android:background="@drawable/vote_up_down"
+        android:background="@drawable/vote_up_down2"
         android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        />
 
     <Button
         android:id="@+id/button_left"
@@ -35,7 +30,8 @@
         android:layout_toLeftOf="@+id/button_right"
         android:layout_toStartOf="@+id/button_right"
         android:background="@drawable/control_left_right"
-        android:textSize="20dp" />
+        android:textSize="20dp"
+        android:textColor="@color/left_right" />
 
     <Button
         android:id="@+id/button_right"
@@ -46,7 +42,8 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:background="@drawable/control_left_right"
-        android:textSize="20dp" />
+        android:textSize="20dp"
+        android:textColor="@color/left_right" />
 
     <Button
         android:id="@+id/button_stop"
@@ -57,7 +54,8 @@
         android:layout_toRightOf="@+id/button_left"
         android:layout_toEndOf="@+id/button_left"
         android:textSize="20dp"
-        android:layout_below="@+id/button_up" />
+        android:layout_below="@+id/button_up"
+        android:background="#00ffffff" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -65,12 +63,29 @@
         android:id="@+id/moto_speed"
         android:hint="馬達速度"
         android:inputType="number"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignRight="@+id/button_up"
-        android:layout_alignEnd="@+id/button_up"
-        android:text="200" />
+        android:text="200"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_horizontal"
+        android:layout_alignEnd="@+id/button_up" />
+
+    <ImageButton
+        android:id="@+id/button_bluetooth"
+        android:layout_width="80dp"
+        android:layout_height="100dp"
+        android:src="@android:drawable/stat_sys_data_bluetooth"
+        android:background="#00ffffff"
+        android:layout_toStartOf="@+id/button_stop"
+        android:layout_alignTop="@+id/moto_speed" />
+
+    <ImageButton
+        android:id="@+id/button_camera"
+        android:layout_width="80dp"
+        android:layout_height="100dp"
+        android:src="@android:drawable/ic_menu_camera"
+        android:background="#00ffffff"
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@+id/button_bluetooth"
+        android:layout_alignTop="@+id/button_bluetooth" />
 
 
 </RelativeLayout>

@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,6 +51,9 @@ public class BluetoothChatFragment extends Fragment {
     private Button mStopButton;
     private EditText mMotoSpeedText;
     private ImageView mImageView;//IP Camera只正一張張的圖
+
+    private ImageButton mBluetoothButton;
+    private ImageButton mCameraButton;
 
     private static final String VIDEO_URL = "http://192.168.43.104:8080/stream/live.jpg";
 
@@ -79,9 +83,6 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-
-        //getActionBar().setLogo(R.drawable.lego_icon_24);
 
         // 取得藍芽設備
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -147,6 +148,8 @@ public class BluetoothChatFragment extends Fragment {
         mStopButton = (Button) view.findViewById(R.id.button_stop);
         mMotoSpeedText = (EditText) view.findViewById(R.id.moto_speed);
         mImageView = (ImageView) view.findViewById(R.id.imageView);
+        mBluetoothButton = (ImageButton) view.findViewById(R.id.button_bluetooth);
+        mCameraButton = (ImageButton) view.findViewById(R.id.button_camera);
     }
 
     int error = 0;
@@ -306,6 +309,27 @@ public class BluetoothChatFragment extends Fragment {
                 mMotoSpeedText.setText(mMotoSpeed + "");
 
                 return false;
+            }
+        });
+
+
+        mBluetoothButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
+                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+            }
+        });
+
+        mCameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (videoThread == null) {
+                    videoThread = new Thread(VideoRunnable);
+                    videoThread.start();
+                }
+
             }
         });
 
@@ -502,41 +526,6 @@ public class BluetoothChatFragment extends Fragment {
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         // Attempt to connect to the device
         mChatService.connect(device, secure);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.bluetooth_chat, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.secure_connect_scan: {
-                // Launch the DeviceListActivity to see devices and do scan
-                Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-                return true;
-            }
-//            case R.id.insecure_connect_scan: {
-//                // Launch the DeviceListActivity to see devices and do scan
-//                Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-//                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
-//                return true;
-//            }
-
-            case R.id.video_onoff: {
-
-                if (videoThread == null) {
-                    videoThread = new Thread(VideoRunnable);
-                    videoThread.start();
-                }
-
-                break;
-            }
-
-        }
-        return false;
     }
 
 }
