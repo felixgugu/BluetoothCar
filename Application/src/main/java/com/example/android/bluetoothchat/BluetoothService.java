@@ -314,7 +314,7 @@ public class BluetoothService {
 
                     if (retry < 3) {
                         retry++;
-                        Thread.sleep(1000);
+                        Thread.sleep(3000);
 
                         Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
                         Bundle bundle = new Bundle();
