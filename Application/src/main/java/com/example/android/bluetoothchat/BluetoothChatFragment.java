@@ -5,16 +5,15 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.text.Editable;
-import android.text.InputFilter;
-import android.text.Spanned;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -26,8 +25,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.URL;
 
 
 public class BluetoothChatFragment extends Fragment {
@@ -45,6 +49,9 @@ public class BluetoothChatFragment extends Fragment {
     private Button mLeftButton;
     private Button mStopButton;
     private EditText mMotoSpeedText;
+    private ImageView mImageView;//IP Camera只正一張張的圖
+
+    private static final String VIDEO_URL = "http://192.168.43.104:8080/stream/live.jpg";
 
     private int mMotoSpeed = 200;
 
@@ -130,6 +137,7 @@ public class BluetoothChatFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_bluetooth_chat, container, false);
     }
 
+
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
 
@@ -138,8 +146,62 @@ public class BluetoothChatFragment extends Fragment {
         mRightButton = (Button) view.findViewById(R.id.button_right);
         mStopButton = (Button) view.findViewById(R.id.button_stop);
         mMotoSpeedText = (EditText) view.findViewById(R.id.moto_speed);
+        mImageView = (ImageView) view.findViewById(R.id.imageView);
     }
 
+    int error = 0;
+
+    Thread videoThread;
+    Runnable VideoRunnable = new Runnable() {
+        @Override
+        public void run() {
+
+            error = 0;
+
+            do {
+
+                if (error > 300) {
+                    break;
+                }
+
+                try {
+                    URL url = new URL(VIDEO_URL);
+                    InputStream is = url.openStream();
+
+                    byte[] bytes = new byte[4096];
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    int n;
+                    while ((n = is.read(bytes)) != -1) {
+                        os.write(bytes, 0, n);
+                    }
+
+                    Message msg = new Message();
+                    msg.what = Constants.MESSAGE_VIDEO;
+                    msg.obj = os;
+                    mHandler.sendMessage(msg);
+
+                    Thread.sleep(1000);
+
+
+                } catch (Exception e) {
+                    //e.printStackTrace();
+                    //Log.e("test", "無法連線影像", e);
+                    error = error + 1;
+                }
+
+            } while (true);
+
+
+            Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
+            Bundle bundle = new Bundle();
+            bundle.putString(Constants.TOAST, "無法連線影像!!");
+            msg.setData(bundle);
+            mHandler.sendMessage(msg);
+
+            videoThread = null;
+
+        }
+    };
 
     /**
      * Set up the UI and background operations for chat.
@@ -246,6 +308,12 @@ public class BluetoothChatFragment extends Fragment {
                 return false;
             }
         });
+
+
+        if (videoThread == null) {
+            videoThread = new Thread(VideoRunnable);
+            videoThread.start();
+        }
 
     }
 
@@ -359,9 +427,35 @@ public class BluetoothChatFragment extends Fragment {
                                 Toast.LENGTH_SHORT).show();
                     }
                     break;
+
+
+                case Constants.MESSAGE_VIDEO:
+                    ByteArrayOutputStream os = (ByteArrayOutputStream) msg.obj;
+
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(os.toByteArray(), 0, os.size());
+
+                    mImageView.setImageBitmap(resizeImage(bitmap, mImageView.getWidth(), mImageView.getHeight()));
+                    break;
             }
         }
     };
+
+    public static Bitmap resizeImage(Bitmap bitmap, int w, int h) {
+        Bitmap BitmapOrg = bitmap;
+        int width = BitmapOrg.getWidth();
+        int height = BitmapOrg.getHeight();
+        int newWidth = w;
+        int newHeight = h;
+
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
+        Bitmap resizedBitmap = Bitmap.createBitmap(BitmapOrg, 0, 0, width,
+                height, matrix, true);
+        return resizedBitmap;
+    }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -389,6 +483,8 @@ public class BluetoothChatFragment extends Fragment {
                             Toast.LENGTH_SHORT).show();
                     getActivity().finish();
                 }
+                break;
+
         }
     }
 
@@ -428,6 +524,16 @@ public class BluetoothChatFragment extends Fragment {
 //                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
 //                return true;
 //            }
+
+            case R.id.video_onoff: {
+
+                if (videoThread == null) {
+                    videoThread = new Thread(VideoRunnable);
+                    videoThread.start();
+                }
+
+                break;
+            }
 
         }
         return false;

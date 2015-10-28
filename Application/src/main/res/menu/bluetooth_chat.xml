@@ -6,6 +6,12 @@
         android:showAsAction="always"
         android:title="@string/secure_connect"/>
 
+    <item
+        android:id="@+id/video_onoff"
+        android:icon="@drawable/camera_icon"
+        android:showAsAction="always"
+        android:title="@string/video_connect"/>
+
 <!--    <item
         android:id="@+id/insecure_connect_scan"
         android:showAsAction="never"
