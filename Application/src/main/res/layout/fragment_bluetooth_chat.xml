@@ -14,7 +14,6 @@
         android:id="@+id/button_up"
         android:layout_width="100dp"
         android:layout_height="200dp"
-        android:text="MOVE"
         android:background="@drawable/vote_up_down2"
         android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"

@@ -183,7 +183,7 @@ public class BluetoothChatFragment extends Fragment {
                     msg.obj = os;
                     mHandler.sendMessage(msg);
 
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
 
 
                 } catch (Exception e) {
