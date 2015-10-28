@@ -54,7 +54,7 @@
         android:layout_toEndOf="@+id/button_left"
         android:textSize="20dp"
         android:layout_below="@+id/button_up"
-        android:background="#00ffffff" />
+        android:background="@drawable/control_stop" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -69,18 +69,18 @@
 
     <ImageButton
         android:id="@+id/button_bluetooth"
-        android:layout_width="80dp"
-        android:layout_height="100dp"
-        android:src="@android:drawable/stat_sys_data_bluetooth"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/icon_bluetooth"
         android:background="#00ffffff"
         android:layout_toStartOf="@+id/button_stop"
         android:layout_alignTop="@+id/moto_speed" />
 
     <ImageButton
         android:id="@+id/button_camera"
-        android:layout_width="80dp"
-        android:layout_height="100dp"
-        android:src="@android:drawable/ic_menu_camera"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/icon_camera"
         android:background="#00ffffff"
         android:layout_alignParentBottom="true"
         android:layout_toStartOf="@+id/button_bluetooth"
