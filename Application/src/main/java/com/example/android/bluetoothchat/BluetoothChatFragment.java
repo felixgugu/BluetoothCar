@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Set;
@@ -84,6 +85,9 @@ public class BluetoothChatFragment extends Fragment {
 
     private boolean mStartRunning = false;//是否正在移動(前進、後退)
 
+
+    private Handler mHandler;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,6 +101,8 @@ public class BluetoothChatFragment extends Fragment {
             Toast.makeText(activity, "您的手機不支援藍芽", Toast.LENGTH_LONG).show();
             activity.finish();
         }
+
+        mHandler = new MyHandler(this);
     }
 
 
@@ -466,82 +472,9 @@ public class BluetoothChatFragment extends Fragment {
         actionBar.setSubtitle(subTitle);
     }
 
-    /**
-     * The Handler that gets information back from the BluetoothService
-     */
-    private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            FragmentActivity activity = getActivity();
-            switch (msg.what) {
-                case Constants.MESSAGE_STATE_CHANGE:
-                    switch (msg.arg1) {
-                        case BluetoothService.STATE_CONNECTED:
-                            setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
-                            break;
-                        case BluetoothService.STATE_CONNECTING:
-                            setStatus(R.string.title_connecting);
-                            break;
-                        case BluetoothService.STATE_LISTEN:
-                        case BluetoothService.STATE_NONE:
-                            setStatus(R.string.title_not_connected);
-                            break;
-                    }
-                    break;
 
-                case Constants.MESSAGE_WRITE:
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
-                    break;
+    ;
 
-                case Constants.MESSAGE_DEVICE_NAME:
-                    // save the connected device's name
-                    mConnectedDeviceName = msg.getData().getString(Constants.DEVICE_NAME);
-                    if (null != activity) {
-                        Toast.makeText(activity, "Connected to "
-                                + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-                    }
-                    break;
-
-                case Constants.MESSAGE_TOAST:
-                    if (null != activity) {
-
-                        Log.d("test", msg.getData().getString(Constants.TOAST));
-
-                        Toast.makeText(activity, msg.getData().getString(Constants.TOAST),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                    break;
-
-
-                case Constants.MESSAGE_VIDEO:
-                    ByteArrayOutputStream os = (ByteArrayOutputStream) msg.obj;
-
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(os.toByteArray(), 0, os.size());
-
-                    mImageView.setImageBitmap(resizeImage(bitmap, mImageView.getWidth(), mImageView.getHeight()));
-                    break;
-            }
-        }
-    };
-
-    public static Bitmap resizeImage(Bitmap bitmap, int w, int h) {
-        Bitmap BitmapOrg = bitmap;
-        int width = BitmapOrg.getWidth();
-        int height = BitmapOrg.getHeight();
-        int newWidth = w;
-        int newHeight = h;
-
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-
-        Matrix matrix = new Matrix();
-        matrix.postScale(scaleWidth, scaleHeight);
-        Bitmap resizedBitmap = Bitmap.createBitmap(BitmapOrg, 0, 0, width,
-                height, matrix, true);
-        return resizedBitmap;
-    }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -588,6 +521,103 @@ public class BluetoothChatFragment extends Fragment {
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         // Attempt to connect to the device
         mChatService.connect(device, secure);
+    }
+
+    /**
+     * 縮小/放大 圖片
+     *
+     * @param bitmap
+     * @param w
+     * @param h
+     * @return
+     */
+    public static Bitmap resizeImage(Bitmap bitmap, int w, int h) {
+        Bitmap BitmapOrg = bitmap;
+        int width = BitmapOrg.getWidth();
+        int height = BitmapOrg.getHeight();
+        int newWidth = w;
+        int newHeight = h;
+
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
+        Bitmap resizedBitmap = Bitmap.createBitmap(BitmapOrg, 0, 0, width,
+                height, matrix, true);
+        return resizedBitmap;
+    }
+
+
+    /**
+     * 根據建議"This Handler class should be static or leaks might occur""
+     * 改用靜態+弱參考，防止momery leaks
+     */
+    static class MyHandler extends Handler {
+
+        private WeakReference<BluetoothChatFragment> weakReference;
+
+        MyHandler(BluetoothChatFragment activity) {
+            weakReference = new WeakReference<>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+
+            BluetoothChatFragment fragment = weakReference.get();
+
+            switch (msg.what) {
+                case Constants.MESSAGE_STATE_CHANGE:
+                    switch (msg.arg1) {
+                        case BluetoothService.STATE_CONNECTED:
+                            fragment.setStatus(fragment.getString(R.string.title_connected_to,
+                                    fragment.mConnectedDeviceName));
+                            break;
+                        case BluetoothService.STATE_CONNECTING:
+                            fragment.setStatus(R.string.title_connecting);
+                            break;
+                        case BluetoothService.STATE_LISTEN:
+                        case BluetoothService.STATE_NONE:
+                            fragment.setStatus(R.string.title_not_connected);
+                            break;
+                    }
+                    break;
+
+                case Constants.MESSAGE_WRITE:
+                    byte[] writeBuf = (byte[]) msg.obj;
+                    // construct a string from the buffer
+                    String writeMessage = new String(writeBuf);
+                    break;
+
+                case Constants.MESSAGE_DEVICE_NAME:
+                    // save the connected device's name
+                    fragment.mConnectedDeviceName = msg.getData().getString(Constants.DEVICE_NAME);
+                    Toast.makeText(fragment.getActivity(), "Connected to "
+                            + fragment.mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+                    break;
+
+                case Constants.MESSAGE_TOAST:
+                    if (null != fragment) {
+
+                        Log.d("test", msg.getData().getString(Constants.TOAST));
+
+                        Toast.makeText(fragment.getActivity(), msg.getData().getString(Constants.TOAST),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+
+
+                case Constants.MESSAGE_VIDEO:
+                    ByteArrayOutputStream os = (ByteArrayOutputStream) msg.obj;
+
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(os.toByteArray(), 0, os.size());
+
+                    fragment.mImageView.setImageBitmap(resizeImage(bitmap,
+                            fragment.mImageView.getWidth(),
+                            fragment.mImageView.getHeight()));
+                    break;
+            }
+        }
     }
 
 }

@@ -42,14 +42,6 @@ import com.example.android.common.activities.SampleActivityBase;
  */
 public class MainActivity extends SampleActivityBase {
 
-    private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-
-
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("test", getClass().getSimpleName() + ".onCreate()");
