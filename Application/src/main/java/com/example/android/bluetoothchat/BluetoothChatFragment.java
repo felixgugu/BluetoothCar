@@ -4,7 +4,10 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -17,9 +20,6 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +32,9 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Set;
 
 
 public class BluetoothChatFragment extends Fragment {
@@ -55,6 +57,7 @@ public class BluetoothChatFragment extends Fragment {
     private ImageButton mBluetoothButton;
     private ImageButton mCameraButton;
 
+
     private static final String VIDEO_URL = "http://192.168.43.104:8080/stream/live.jpg";
 
     private int mMotoSpeed = 200;
@@ -68,7 +71,7 @@ public class BluetoothChatFragment extends Fragment {
      * 藍芽設備
      */
     private BluetoothAdapter mBluetoothAdapter = null;
-
+    private String mBluetoothDeviceName = "HC-06";
 
     /**
      * 藍芽服務
@@ -76,9 +79,10 @@ public class BluetoothChatFragment extends Fragment {
     private BluetoothService mChatService = null;
 
 
-    private String lastCmd;//最後送出的指令
+    //最後送出的指令
+    private String lastCmd;
 
-    private boolean isMove = false;//是否正在移動(前進、後退)
+    private boolean mStartRunning = false;//是否正在移動(前進、後退)
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -226,13 +230,13 @@ public class BluetoothChatFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    isMove = true;
+                    mStartRunning = true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    isMove = false;
+                    mStartRunning = false;
                     sendCommand("x,0");//停車
                 }
 
-                if (isMove && event.getAction() == MotionEvent.ACTION_MOVE) {
+                if (mStartRunning && event.getAction() == MotionEvent.ACTION_MOVE) {
                     if (event.getY() < centerVal) {
                         sendCommand("f," + mMotoSpeed);
                     } else {
@@ -244,45 +248,43 @@ public class BluetoothChatFragment extends Fragment {
             }
         });
 
+
+        //右轉
         mRightButton.setOnTouchListener(new View.OnTouchListener() {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    isMove = false;
                     sendCommand("r,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     sendCommand("a,90");//轉回中間
-                    isMove = true;
                 }
 
                 return false;
             }
         });
 
+        //左轉
         mLeftButton.setOnTouchListener(new View.OnTouchListener() {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    isMove = false;
                     sendCommand("l,0");
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     sendCommand("a,90");//轉回中間
-                    isMove = true;
                 }
 
                 return false;
             }
         });
 
+        //備用停車(一般來說，手放開就停了，這個算緊急用的
         mStopButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (v.getId() == R.id.button_stop) {
-                    sendCommand("x,0");//停車
-                }
+                sendCommand("x,0");//停車
             }
         });
 
@@ -313,14 +315,50 @@ public class BluetoothChatFragment extends Fragment {
         });
 
 
+        // 藍芽
         mBluetoothButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+                //Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
+                //startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+
+                //改成直接連
+
+                //若已綁定，先解除，(不知為何綁定過的，難連上)
+                try {
+
+                    Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+                    for (BluetoothDevice bluetoothDevice : pairedDevices) {
+                        if (mBluetoothDeviceName.equals(bluetoothDevice.getName())) {
+                            Method method = bluetoothDevice.getClass().getMethod("removeBond");
+                            method.invoke(bluetoothDevice);
+
+                            Log.d("test", "已解除 " + bluetoothDevice.getName() + " 綁定");
+                        }
+                    }
+
+                    if (mBluetoothAdapter.isDiscovering()) {
+                        mBluetoothAdapter.cancelDiscovery();
+                    }
+
+                    IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                    getActivity().registerReceiver(mReceiver, filter);
+
+                    Log.d("test", "bluetooth start discovery");
+                    mBluetoothAdapter.startDiscovery();
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+
+                    Log.d("test", "bluetooth unregisterReceiver");
+                    getActivity().unregisterReceiver(mReceiver);
+                }
             }
         });
 
+        // 影像IP Camera
         mCameraButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -341,6 +379,25 @@ public class BluetoothChatFragment extends Fragment {
 
     }
 
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if (mBluetoothDeviceName.equals(device.getName())) {
+                    //mNewDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+                    //mBluetoothAddress = device.getAddress();
+                    Log.d("test", device.getName() + "\n" + device.getAddress());
+                    device.setPin("1234".getBytes());
+
+                    mChatService.connect(device, true);
+                }
+            }
+        }
+    };
+
+
     /**
      * 送出指令
      *
@@ -348,6 +405,10 @@ public class BluetoothChatFragment extends Fragment {
      */
     private void sendCommand(String cmd) {
 
+        if (!mStartRunning
+                && (cmd.startsWith("f") || cmd.startsWith("b"))) {
+            return;
+        }
 
         // 指令重覆退回不執行(touch時會持續發出相同的指令)
         if (cmd.equals(lastCmd)) {
@@ -362,6 +423,7 @@ public class BluetoothChatFragment extends Fragment {
             Toast.makeText(getActivity(), R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
+
 
         if (cmd.length() > 0) {
             byte[] send = (cmd).getBytes();

@@ -263,23 +263,24 @@ public class BluetoothService {
 
         public ConnectThread(BluetoothDevice device, boolean secure) {
             mmDevice = device;
-            BluetoothSocket tmp = null;
+            BluetoothSocket tmpSocket = null;
             mSocketType = secure ? "Secure" : "Insecure";
 
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
             try {
                 if (secure) {
-                    tmp = device.createRfcommSocketToServiceRecord(
+                    tmpSocket = device.createRfcommSocketToServiceRecord(
                             MY_UUID_SECURE);
                 } else {
-                    tmp = device.createInsecureRfcommSocketToServiceRecord(
+                    tmpSocket = device.createInsecureRfcommSocketToServiceRecord(
                             MY_UUID_INSECURE);
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
             }
-            mmSocket = tmp;
+
+            mmSocket = tmpSocket;
         }
 
         private int retry = 0;
@@ -290,7 +291,6 @@ public class BluetoothService {
 
             // Always cancel discovery because it will slow down a connection
             mAdapter.cancelDiscovery();
-
 
             // Make a connection to the BluetoothSocket
             try {
