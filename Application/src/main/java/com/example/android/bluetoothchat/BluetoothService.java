@@ -217,6 +217,8 @@ public class BluetoothService {
             r = mConnectedThread;
         }
         // Perform the write unsynchronized
+
+        Log.d("test", "out:" + (new String(out)));
         r.write(out);
     }
 
@@ -318,7 +320,7 @@ public class BluetoothService {
 
                         Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
                         Bundle bundle = new Bundle();
-                        bundle.putString(Constants.TOAST, "連線失敗，重試第"+retry+"次");
+                        bundle.putString(Constants.TOAST, "連線失敗，重試第" + retry + "次");
                         msg.setData(bundle);
                         mHandler.sendMessage(msg);
 

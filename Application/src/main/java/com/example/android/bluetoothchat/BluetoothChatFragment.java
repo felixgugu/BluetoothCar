@@ -350,6 +350,9 @@ public class BluetoothChatFragment extends Fragment {
                     IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
                     getActivity().registerReceiver(mReceiver, filter);
 
+                    IntentFilter filter2 = new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST");
+                    getActivity().registerReceiver(pairingRequest, filter2);
+
                     Log.d("test", "bluetooth start discovery");
                     mBluetoothAdapter.startDiscovery();
 
@@ -357,9 +360,8 @@ public class BluetoothChatFragment extends Fragment {
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
-
                     Log.d("test", "bluetooth unregisterReceiver");
-                    getActivity().unregisterReceiver(mReceiver);
+                    //getActivity().unregisterReceiver(mReceiver);
                 }
             }
         });
@@ -385,6 +387,8 @@ public class BluetoothChatFragment extends Fragment {
 
     }
 
+    private BluetoothDevice mBluetoothDevice;
+
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -395,14 +399,30 @@ public class BluetoothChatFragment extends Fragment {
                     //mNewDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
                     //mBluetoothAddress = device.getAddress();
                     Log.d("test", device.getName() + "\n" + device.getAddress());
-                    device.setPin("1234".getBytes());
 
-                    mChatService.connect(device, true);
+                    mBluetoothDevice = device;
+                    mChatService.connect(device, false);
                 }
             }
         }
     };
 
+    private final BroadcastReceiver pairingRequest = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent.getAction().equals("android.bluetooth.device.action.PAIRING_REQUEST")) {
+                try {
+                    byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes", String.class).invoke(BluetoothDevice.class, "1234");
+                    Method m = mBluetoothDevice.getClass().getMethod("setPin", byte[].class);
+                    m.invoke(mBluetoothDevice, pin);
+                    mBluetoothDevice.getClass().getMethod("setPairingConfirmation", boolean.class).invoke(mBluetoothDevice, true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
 
     /**
      * 送出指令
@@ -430,6 +450,11 @@ public class BluetoothChatFragment extends Fragment {
             return;
         }
 
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         if (cmd.length() > 0) {
             byte[] send = (cmd).getBytes();
@@ -565,6 +590,10 @@ public class BluetoothChatFragment extends Fragment {
         public void handleMessage(Message msg) {
 
             BluetoothChatFragment fragment = weakReference.get();
+
+            if (fragment == null || fragment.getActivity() == null) {
+                return;
+            }
 
             switch (msg.what) {
                 case Constants.MESSAGE_STATE_CHANGE:
