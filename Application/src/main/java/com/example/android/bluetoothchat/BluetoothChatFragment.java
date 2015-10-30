@@ -18,7 +18,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -56,7 +55,6 @@ public class BluetoothChatFragment extends Fragment {
     private Button mLeftButton;
     private Button mStopButton;
     private Button mMenuButton;
-    private EditText mMotoSpeedText;
     private EditText mBluetoothName;
     private EditText mBluetoothPasswd;
     private ImageView mImageView;//IP Camera只正一張張的圖
@@ -189,7 +187,7 @@ public class BluetoothChatFragment extends Fragment {
         mLeftButton = (Button) view.findViewById(R.id.button_left);
         mRightButton = (Button) view.findViewById(R.id.button_right);
         mStopButton = (Button) view.findViewById(R.id.button_stop);
-        mMotoSpeedText = (EditText) view.findViewById(R.id.moto_speed);
+        //mMotoSpeedText = (EditText) view.findViewById(R.id.moto_speed);
         mImageView = (ImageView) view.findViewById(R.id.imageView);
         mBluetoothButton = (ImageButton) view.findViewById(R.id.button_bluetooth);
         mCameraButton = (ImageButton) view.findViewById(R.id.button_camera);
@@ -334,28 +332,6 @@ public class BluetoothChatFragment extends Fragment {
         // Initialize the BluetoothService to perform bluetooth connections
         mChatService = new BluetoothService(getActivity(), mHandler);
 
-        //切換速度
-        mMotoSpeedText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                try {
-                    int speed = Integer.parseInt(v.getText().toString());
-                    Log.d("test", "speed:" + speed);
-                    if (speed > 0 && speed < 250) {
-                        mMotoSpeed = speed;
-                    } else {
-                        mMotoSpeed = 200;
-                    }
-                } catch (Exception e) {
-                    mMotoSpeed = 200;
-                    Log.e("test", "error", e);
-                }
-
-                mMotoSpeedText.setText(mMotoSpeed + "");
-
-                return false;
-            }
-        });
 
         //選單
         mMenuButton.setOnClickListener(new View.OnClickListener() {
