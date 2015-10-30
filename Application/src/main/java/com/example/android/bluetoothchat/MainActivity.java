@@ -17,7 +17,6 @@
 
 package com.example.android.bluetoothchat;
 
-import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
@@ -39,27 +38,22 @@ public class MainActivity extends SampleActivityBase {
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("test", getClass().getSimpleName() + ".onCreate()");
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-
-
         Log.d("ptt", "getRequestedOrientation1:" + (getResources().getConfiguration().orientation));
-        if (Configuration.ORIENTATION_LANDSCAPE == getResources().getConfiguration().orientation) {
-            //水平
-            // Hide both the navigation bar and the status bar.
-            hideSystemUI();
-        }
 
-        View decorView = getWindow().getDecorView();
-        decorView.setOnSystemUiVisibilityChangeListener(
-                new View.OnSystemUiVisibilityChangeListener() {
-                    @Override
-                    public void onSystemUiVisibilityChange(int visibility) {
-                        if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                            hideSystemUI();
-                        }
-                    }
-                });
+        hideSystemUI();
+
+        final View decorView = getWindow().getDecorView();
+        decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            @Override
+            public void onSystemUiVisibilityChange(int visibility) {
+                if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                    hideSystemUI();
+                }
+            }
+        });
 
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -74,10 +68,9 @@ public class MainActivity extends SampleActivityBase {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-
-        //if (Configuration.ORIENTATION_LANDSCAPE == getResources().getConfiguration().orientation) {
+        if (hasFocus) {
             hideSystemUI();
-        //}
+        }
     }
 
     private void hideSystemUI() {

@@ -30,6 +30,9 @@ public interface Constants {
     public static final int MESSAGE_VIDEO = 6;
     public static final int MESSAGE_INFO = 7;
 
+    public static final int CAMERA_ONLINE = 20;
+    public static final int CAMERA_OFFLINE = 21;
+
     // Key names received from the BluetoothService Handler
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";

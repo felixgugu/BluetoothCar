@@ -1,6 +1,7 @@
 package com.example.android.bluetoothchat;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -22,10 +23,12 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,8 +55,10 @@ public class BluetoothChatFragment extends Fragment {
     private Button mRightButton;
     private Button mLeftButton;
     private Button mStopButton;
-    private Button mExitButton;
+    private Button mMenuButton;
     private EditText mMotoSpeedText;
+    private EditText mBluetoothName;
+    private EditText mBluetoothPasswd;
     private ImageView mImageView;//IP Camera只正一張張的圖
     private TextView mTextMessage;
 
@@ -74,12 +79,13 @@ public class BluetoothChatFragment extends Fragment {
      * 藍芽設備
      */
     private BluetoothAdapter mBluetoothAdapter = null;
-    private String mBluetoothDeviceName = "HC-06";
+    //private String mBluetoothDeviceName = "HC-06";
 
     /**
      * 藍芽服務
      */
     private BluetoothService mChatService = null;
+    private BluetoothDevice mBluetoothDevice;
 
 
     //最後送出的指令
@@ -89,6 +95,10 @@ public class BluetoothChatFragment extends Fragment {
 
 
     private Handler mHandler;
+
+
+    private View mMenuView;
+    private Dialog mDialog;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -105,6 +115,27 @@ public class BluetoothChatFragment extends Fragment {
         }
 
         mHandler = new MyHandler(this);
+
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        getActivity().registerReceiver(mReceiver, filter);
+
+        IntentFilter filter2 = new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST");
+        getActivity().registerReceiver(pairingRequest, filter2);
+
+
+        mMenuView = getActivity().getLayoutInflater().inflate(R.layout.setting_dialog, null);
+
+
+        mDialog = new Dialog(getActivity(), R.style.selectorDialog);
+        mDialog.setContentView(mMenuView);
+
+        // 由程式設定 Dialog 視窗外的明暗程度, 亮度從 0f 到 1f
+        WindowManager.LayoutParams lp = mDialog.getWindow().getAttributes();
+        lp.dimAmount = 0.2f;
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+        mDialog.getWindow().setAttributes(lp);
+
+
     }
 
 
@@ -162,9 +193,14 @@ public class BluetoothChatFragment extends Fragment {
         mImageView = (ImageView) view.findViewById(R.id.imageView);
         mBluetoothButton = (ImageButton) view.findViewById(R.id.button_bluetooth);
         mCameraButton = (ImageButton) view.findViewById(R.id.button_camera);
-        mExitButton = (Button) view.findViewById(R.id.button_exit);
+        mMenuButton = (Button) view.findViewById(R.id.button_menu);
         mTextMessage = (TextView) view.findViewById(R.id.text_message);
         mTextMessage.setText("");
+
+        mBluetoothName = (EditText) mMenuView.findViewById(R.id.text_bluetoothName);
+        mBluetoothPasswd = (EditText) mMenuView.findViewById(R.id.text_bluetoothPasswd);
+
+
     }
 
     int error = 0;
@@ -174,9 +210,9 @@ public class BluetoothChatFragment extends Fragment {
         @Override
         public void run() {
 
-            Log.d(TAG, "開始連結視訊");
 
-            mHandler.obtainMessage(Constants.MESSAGE_INFO, "開始連結視訊").sendToTarget();
+            mHandler.obtainMessage(Constants.MESSAGE_INFO, "視訊連線中..").sendToTarget();
+            mHandler.obtainMessage(Constants.MESSAGE_STATE_CHANGE, Constants.CAMERA_ONLINE, -1).sendToTarget();
 
             do {
                 try {
@@ -201,6 +237,7 @@ public class BluetoothChatFragment extends Fragment {
 
                     is.close();
 
+
                 } catch (Exception e) {
                     //e.printStackTrace();
                     Log.e("test", "無法連線影像", e);
@@ -210,8 +247,9 @@ public class BluetoothChatFragment extends Fragment {
 
             } while (true);
 
-            mHandler.obtainMessage(Constants.MESSAGE_INFO, "連結視訊失敗").sendToTarget();
+            mHandler.obtainMessage(Constants.MESSAGE_INFO, "視訊中斷..").sendToTarget();
             videoThread = null;
+            mHandler.obtainMessage(Constants.MESSAGE_STATE_CHANGE, Constants.CAMERA_OFFLINE, -1).sendToTarget();
         }
     };
 
@@ -319,15 +357,13 @@ public class BluetoothChatFragment extends Fragment {
             }
         });
 
-        //離開
-        mExitButton.setOnLongClickListener(new View.OnLongClickListener() {
+        //選單
+        mMenuButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
-                getActivity().finish();
-                return true;
+            public void onClick(View v) {
+                mDialog.show();
             }
         });
-
 
         // 藍芽
         mBluetoothButton.setOnClickListener(new View.OnClickListener() {
@@ -342,7 +378,9 @@ public class BluetoothChatFragment extends Fragment {
 
                     Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
                     for (BluetoothDevice bluetoothDevice : pairedDevices) {
-                        if (mBluetoothDeviceName.equals(bluetoothDevice.getName())) {
+
+
+                        if (mBluetoothName.getText().equals(bluetoothDevice.getName())) {
                             Method method = bluetoothDevice.getClass().getMethod("removeBond");
                             method.invoke(bluetoothDevice);
 
@@ -354,11 +392,6 @@ public class BluetoothChatFragment extends Fragment {
                         mBluetoothAdapter.cancelDiscovery();
                     }
 
-                    IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-                    getActivity().registerReceiver(mReceiver, filter);
-
-                    IntentFilter filter2 = new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST");
-                    getActivity().registerReceiver(pairingRequest, filter2);
 
                     Log.d("test", "bluetooth start discovery");
                     mBluetoothAdapter.startDiscovery();
@@ -384,6 +417,40 @@ public class BluetoothChatFragment extends Fragment {
             }
         });
 
+
+        //設定選單
+        Button exitButton = (Button) mMenuView.findViewById(R.id.button_exit);
+        exitButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                getActivity().finish();
+                return true;
+            }
+        });
+
+        final TextView view = (TextView) mMenuView.findViewById(R.id.label_motospeed);
+        view.setText("馬達功率(" + mMotoSpeed + ")");
+        SeekBar seekBar = (SeekBar) mMenuView.findViewById(R.id.seek_motospeed);
+        seekBar.setProgress(mMotoSpeed);
+        seekBar.setMax(255);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                Log.d("test", "progress:" + progress);
+                mMotoSpeed = progress;
+                view.setText("馬達功率(" + mMotoSpeed + ")");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
         //啟動視訊
         mCameraButton.callOnClick();
 
@@ -392,7 +459,6 @@ public class BluetoothChatFragment extends Fragment {
 
     }
 
-    private BluetoothDevice mBluetoothDevice;
 
     /**
      * 藍芽搜尋結果接收
@@ -403,7 +469,7 @@ public class BluetoothChatFragment extends Fragment {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if (mBluetoothDeviceName.equals(device.getName())) {
+                if (mBluetoothName.getText().equals(device.getName())) {
                     //mNewDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
                     //mBluetoothAddress = device.getAddress();
                     Log.d("test", device.getName() + "\n" + device.getAddress());
@@ -411,7 +477,8 @@ public class BluetoothChatFragment extends Fragment {
                     mBluetoothDevice = device;
 
                     try {
-                        byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes", String.class).invoke(BluetoothDevice.class, "1234");
+                        byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes", String.class).invoke(BluetoothDevice.class,
+                                mBluetoothPasswd.getText());
 
                         Method m = mBluetoothDevice.getClass().getMethod("setPin", byte[].class);
                         m.invoke(mBluetoothDevice, pin);
@@ -435,7 +502,8 @@ public class BluetoothChatFragment extends Fragment {
 
             if (intent.getAction().equals("android.bluetooth.device.action.PAIRING_REQUEST")) {
                 try {
-                    byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes", String.class).invoke(BluetoothDevice.class, "1234");
+                    byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes",
+                            String.class).invoke(BluetoothDevice.class, mBluetoothPasswd.getText());
                     Method m = mBluetoothDevice.getClass().getMethod("setPin", byte[].class);
                     m.invoke(mBluetoothDevice, pin);
                     mBluetoothDevice.getClass().getMethod("setPairingConfirmation", boolean.class).invoke(mBluetoothDevice, true);
@@ -635,6 +703,14 @@ public class BluetoothChatFragment extends Fragment {
                             fragment.setStatus(R.string.title_not_connected);
                             fragment.mBluetoothButton.setImageResource(R.drawable.icon_bluetooth_off);
                             break;
+
+                        case Constants.CAMERA_ONLINE:
+                            fragment.mCameraButton.setImageResource(R.drawable.icon_camera_on);
+                            break;
+
+                        case Constants.CAMERA_OFFLINE:
+                            fragment.mCameraButton.setImageResource(R.drawable.icon_camera_off);
+                            break;
                     }
                     break;
 
@@ -671,7 +747,7 @@ public class BluetoothChatFragment extends Fragment {
 
                 case Constants.MESSAGE_INFO:
                     String message = (String) msg.obj;
-                    fragment.mTextMessage.append(message + "\n");
+                    fragment.mTextMessage.setText(message);
                     break;
             }
         }

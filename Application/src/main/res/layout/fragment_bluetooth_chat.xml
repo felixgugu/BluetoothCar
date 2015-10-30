@@ -59,15 +59,14 @@
         android:layout_alignEnd="@+id/button_right" />
 
     <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
         android:id="@+id/moto_speed"
-        android:hint="馬達速度"
         android:inputType="number"
         android:text="200"
-        android:layout_alignParentBottom="true"
         android:gravity="center_horizontal"
-        android:layout_alignEnd="@+id/button_up" />
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 
     <ImageButton
         android:id="@+id/button_bluetooth"
@@ -85,28 +84,31 @@
         android:src="@drawable/icon_camera_off"
         android:background="#00ffffff"
         android:layout_alignParentTop="true"
-        android:layout_alignStart="@+id/moto_speed" />
+        android:layout_alignParentStart="true" />
 
     <Button
-        android:id="@+id/button_exit"
+        android:id="@+id/button_menu"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:text="X"
+        android:text="◎"
         android:textSize="20dp"
         android:background="@drawable/control_exit"
         android:layout_alignParentTop="true"
         android:layout_alignEnd="@+id/button_right"
-        android:textColor="#000000" />
+        android:textColor="#000000"
+        android:layout_margin="3dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:id="@+id/text_message"
-        android:text="X"
-        android:layout_toEndOf="@+id/button_bluetooth"
-        android:layout_alignParentTop="true"
-        android:textColor="#999999" />
+        android:text="message"
+        android:textColor="#ffffff"
+        android:background="#000000"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="5dp" />
 
 
 </RelativeLayout>
