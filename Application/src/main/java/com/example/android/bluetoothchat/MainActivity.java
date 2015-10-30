@@ -17,19 +17,12 @@
 
 package com.example.android.bluetoothchat;
 
-import android.annotation.SuppressLint;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.ViewAnimator;
 
 import com.example.android.common.activities.SampleActivityBase;
 
@@ -49,9 +42,6 @@ public class MainActivity extends SampleActivityBase {
         setContentView(R.layout.activity_main);
 
 
-        //if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
-        //    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        //}
 
         Log.d("ptt", "getRequestedOrientation1:" + (getResources().getConfiguration().orientation));
         if (Configuration.ORIENTATION_LANDSCAPE == getResources().getConfiguration().orientation) {
@@ -85,9 +75,9 @@ public class MainActivity extends SampleActivityBase {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
-        if (Configuration.ORIENTATION_LANDSCAPE == getResources().getConfiguration().orientation) {
+        //if (Configuration.ORIENTATION_LANDSCAPE == getResources().getConfiguration().orientation) {
             hideSystemUI();
-        }
+        //}
     }
 
     private void hideSystemUI() {

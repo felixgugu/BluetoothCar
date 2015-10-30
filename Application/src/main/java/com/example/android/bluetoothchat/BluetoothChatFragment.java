@@ -1,6 +1,5 @@
 package com.example.android.bluetoothchat;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -35,6 +34,7 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Set;
 
 
@@ -52,8 +52,10 @@ public class BluetoothChatFragment extends Fragment {
     private Button mRightButton;
     private Button mLeftButton;
     private Button mStopButton;
+    private Button mExitButton;
     private EditText mMotoSpeedText;
     private ImageView mImageView;//IP Camera只正一張張的圖
+    private TextView mTextMessage;
 
     private ImageButton mBluetoothButton;
     private ImageButton mCameraButton;
@@ -160,26 +162,28 @@ public class BluetoothChatFragment extends Fragment {
         mImageView = (ImageView) view.findViewById(R.id.imageView);
         mBluetoothButton = (ImageButton) view.findViewById(R.id.button_bluetooth);
         mCameraButton = (ImageButton) view.findViewById(R.id.button_camera);
+        mExitButton = (Button) view.findViewById(R.id.button_exit);
+        mTextMessage = (TextView) view.findViewById(R.id.text_message);
+        mTextMessage.setText("");
     }
 
     int error = 0;
 
-    Thread videoThread;
-    Runnable VideoRunnable = new Runnable() {
+    private Thread videoThread;
+    private Runnable VideoRunnable = new Runnable() {
         @Override
         public void run() {
 
-            error = 0;
+            Log.d(TAG, "開始連結視訊");
+
+            mHandler.obtainMessage(Constants.MESSAGE_INFO, "開始連結視訊").sendToTarget();
 
             do {
-
-                if (error > 300) {
-                    break;
-                }
-
                 try {
                     URL url = new URL(VIDEO_URL);
-                    InputStream is = url.openStream();
+                    URLConnection connection = url.openConnection();
+                    connection.setConnectTimeout(3000);
+                    InputStream is = connection.getInputStream();
 
                     byte[] bytes = new byte[4096];
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -195,24 +199,19 @@ public class BluetoothChatFragment extends Fragment {
 
                     Thread.sleep(100);
 
+                    is.close();
 
                 } catch (Exception e) {
                     //e.printStackTrace();
-                    //Log.e("test", "無法連線影像", e);
+                    Log.e("test", "無法連線影像", e);
                     error = error + 1;
+                    break;
                 }
 
             } while (true);
 
-
-            Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
-            Bundle bundle = new Bundle();
-            bundle.putString(Constants.TOAST, "無法連線影像!!");
-            msg.setData(bundle);
-            mHandler.sendMessage(msg);
-
+            mHandler.obtainMessage(Constants.MESSAGE_INFO, "連結視訊失敗").sendToTarget();
             videoThread = null;
-
         }
     };
 
@@ -297,7 +296,7 @@ public class BluetoothChatFragment extends Fragment {
         // Initialize the BluetoothService to perform bluetooth connections
         mChatService = new BluetoothService(getActivity(), mHandler);
 
-        //
+        //切換速度
         mMotoSpeedText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -320,6 +319,15 @@ public class BluetoothChatFragment extends Fragment {
             }
         });
 
+        //離開
+        mExitButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                getActivity().finish();
+                return true;
+            }
+        });
+
 
         // 藍芽
         mBluetoothButton.setOnClickListener(new View.OnClickListener() {
@@ -327,7 +335,6 @@ public class BluetoothChatFragment extends Fragment {
             public void onClick(View v) {
                 //Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
                 //startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-
                 //改成直接連
 
                 //若已綁定，先解除，(不知為何綁定過的，難連上)
@@ -370,25 +377,26 @@ public class BluetoothChatFragment extends Fragment {
         mCameraButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 if (videoThread == null) {
                     videoThread = new Thread(VideoRunnable);
                     videoThread.start();
                 }
-
             }
         });
 
+        //啟動視訊
+        mCameraButton.callOnClick();
 
-        if (videoThread == null) {
-            videoThread = new Thread(VideoRunnable);
-            videoThread.start();
-        }
+        //啟動藍芽
+        mBluetoothButton.callOnClick();
 
     }
 
     private BluetoothDevice mBluetoothDevice;
 
+    /**
+     * 藍芽搜尋結果接收
+     */
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -401,6 +409,20 @@ public class BluetoothChatFragment extends Fragment {
                     Log.d("test", device.getName() + "\n" + device.getAddress());
 
                     mBluetoothDevice = device;
+
+                    try {
+                        byte[] pin = (byte[]) BluetoothDevice.class.getMethod("convertPinToBytes", String.class).invoke(BluetoothDevice.class, "1234");
+
+                        Method m = mBluetoothDevice.getClass().getMethod("setPin", byte[].class);
+                        m.invoke(mBluetoothDevice, pin);
+
+                        mBluetoothDevice.getClass().getMethod("setPairingConfirmation", boolean.class).invoke(mBluetoothDevice, true);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
                     mChatService.connect(device, false);
                 }
             }
@@ -473,11 +495,14 @@ public class BluetoothChatFragment extends Fragment {
         if (null == activity) {
             return;
         }
-        final ActionBar actionBar = activity.getActionBar();
-        if (null == actionBar) {
-            return;
-        }
-        actionBar.setSubtitle(resId);
+//        final ActionBar actionBar = activity.getActionBar();
+//        if (null == actionBar) {
+//            return;
+//        }
+//        actionBar.setSubtitle(resId);
+
+        mHandler.obtainMessage(Constants.MESSAGE_INFO, getResources().getString(resId)).sendToTarget();
+
     }
 
     /**
@@ -490,16 +515,14 @@ public class BluetoothChatFragment extends Fragment {
         if (null == activity) {
             return;
         }
-        final ActionBar actionBar = activity.getActionBar();
-        if (null == actionBar) {
-            return;
-        }
-        actionBar.setSubtitle(subTitle);
+        //final ActionBar actionBar = activity.getActionBar();
+        //if (null == actionBar) {
+        //    return;
+        //}
+        //actionBar.setSubtitle(subTitle);
+
+        mHandler.obtainMessage(Constants.MESSAGE_INFO, subTitle).sendToTarget();
     }
-
-
-    ;
-
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -550,11 +573,6 @@ public class BluetoothChatFragment extends Fragment {
 
     /**
      * 縮小/放大 圖片
-     *
-     * @param bitmap
-     * @param w
-     * @param h
-     * @return
      */
     public static Bitmap resizeImage(Bitmap bitmap, int w, int h) {
         Bitmap BitmapOrg = bitmap;
@@ -578,7 +596,7 @@ public class BluetoothChatFragment extends Fragment {
      * 根據建議"This Handler class should be static or leaks might occur""
      * 改用靜態+弱參考，防止momery leaks
      */
-    static class MyHandler extends Handler {
+    private static class MyHandler extends Handler {
 
         private WeakReference<BluetoothChatFragment> weakReference;
 
@@ -592,6 +610,7 @@ public class BluetoothChatFragment extends Fragment {
             BluetoothChatFragment fragment = weakReference.get();
 
             if (fragment == null || fragment.getActivity() == null) {
+                Log.d("test", "fragment == null || fragment.getActivity() == null");
                 return;
             }
 
@@ -599,15 +618,22 @@ public class BluetoothChatFragment extends Fragment {
                 case Constants.MESSAGE_STATE_CHANGE:
                     switch (msg.arg1) {
                         case BluetoothService.STATE_CONNECTED:
-                            fragment.setStatus(fragment.getString(R.string.title_connected_to,
-                                    fragment.mConnectedDeviceName));
+
+                            fragment.setStatus(fragment.getString(R.string.title_connected_to, fragment.mConnectedDeviceName));
+                            fragment.mBluetoothButton.setImageResource(R.drawable.icon_bluetooth_on);
+
                             break;
                         case BluetoothService.STATE_CONNECTING:
+
                             fragment.setStatus(R.string.title_connecting);
+
+
                             break;
                         case BluetoothService.STATE_LISTEN:
+
                         case BluetoothService.STATE_NONE:
                             fragment.setStatus(R.string.title_not_connected);
+                            fragment.mBluetoothButton.setImageResource(R.drawable.icon_bluetooth_off);
                             break;
                     }
                     break;
@@ -626,13 +652,10 @@ public class BluetoothChatFragment extends Fragment {
                     break;
 
                 case Constants.MESSAGE_TOAST:
-                    if (null != fragment) {
 
-                        Log.d("test", msg.getData().getString(Constants.TOAST));
-
-                        Toast.makeText(fragment.getActivity(), msg.getData().getString(Constants.TOAST),
-                                Toast.LENGTH_SHORT).show();
-                    }
+                    Log.d(TAG, msg.getData().getString(Constants.TOAST));
+                    Toast.makeText(fragment.getActivity(), msg.getData().getString(Constants.TOAST),
+                            Toast.LENGTH_SHORT).show();
                     break;
 
 
@@ -644,6 +667,11 @@ public class BluetoothChatFragment extends Fragment {
                     fragment.mImageView.setImageBitmap(resizeImage(bitmap,
                             fragment.mImageView.getWidth(),
                             fragment.mImageView.getHeight()));
+                    break;
+
+                case Constants.MESSAGE_INFO:
+                    String message = (String) msg.obj;
+                    fragment.mTextMessage.append(message + "\n");
                     break;
             }
         }
