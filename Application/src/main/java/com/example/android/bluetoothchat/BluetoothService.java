@@ -312,25 +312,25 @@ public class BluetoothService {
                             " socket during connection failure", e2);
                 }
 
-                try {
-
-                    if (retry < 3) {
-                        retry++;
-                        Thread.sleep(3000);
-
-                        Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
-                        Bundle bundle = new Bundle();
-                        bundle.putString(Constants.TOAST, "連線失敗，重試第" + retry + "次");
-                        msg.setData(bundle);
-                        mHandler.sendMessage(msg);
-
-
-                        run();
-                    }
-
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                }
+//                try {
+//
+//                    if (retry < 3) {
+//                        retry++;
+//                        Thread.sleep(3000);
+//
+//                        Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
+//                        Bundle bundle = new Bundle();
+//                        bundle.putString(Constants.TOAST, "連線失敗，重試第" + retry + "次");
+//                        msg.setData(bundle);
+//                        mHandler.sendMessage(msg);
+//
+//
+//                        run();
+//                    }
+//
+//                } catch (InterruptedException e1) {
+//                    e1.printStackTrace();
+//                }
 
                 retry = 0;
                 connectionFailed();
