@@ -43,7 +43,6 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/textView"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|right"
@@ -68,7 +67,6 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/textView2"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|right"
@@ -82,6 +80,30 @@
             android:id="@+id/text_bluetoothPasswd"
             android:layout_gravity="center_vertical|right"
             android:text="1234"
+            android:textColor="#000000" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shape_circular_fontsize"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|right"
+            android:layout_margin="5dp"
+            android:text="藍芽密碼"
+            android:textColor="#000000" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/text_videoUrl"
+            android:layout_gravity="center_vertical|right"
+            android:text="http://192.168.43.104:8080/stream/live.jpg"
             android:textColor="#000000" />
     </LinearLayout>
 
