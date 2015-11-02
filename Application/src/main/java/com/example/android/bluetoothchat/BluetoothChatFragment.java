@@ -138,7 +138,7 @@ public class BluetoothChatFragment extends Fragment {
             @Override
             public void onDismiss(DialogInterface dialog) {
 
-                Log.d(TAG,"保存設定值");
+                Log.d(TAG, "保存設定值");
 
                 SharedPreferences sharedPreferences = getActivity().getSharedPreferences("mycar", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -220,8 +220,8 @@ public class BluetoothChatFragment extends Fragment {
         //取出設定值或預設
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("mycar", Context.MODE_PRIVATE);
         mBluetoothName.setText(sharedPreferences.getString("mBluetoothName", "HC-06"));
-        mBluetoothPasswd.setText(sharedPreferences.getString("mBluetoothPasswd","1234"));
-        mVideoUrl.setText(sharedPreferences.getString("mVideoUrl","http://192.168.43.104:8080/stream/live.jpg"));
+        mBluetoothPasswd.setText(sharedPreferences.getString("mBluetoothPasswd", "1234"));
+        mVideoUrl.setText(sharedPreferences.getString("mVideoUrl", "http://192.168.43.104:8080/stream/live.jpg"));
 
     }
 
@@ -249,11 +249,7 @@ public class BluetoothChatFragment extends Fragment {
                         os.write(bytes, 0, n);
                     }
 
-                    Message msg = new Message();
-                    msg.what = Constants.MESSAGE_VIDEO;
-                    msg.obj = os;
-                    mHandler.sendMessage(msg);
-
+                    mHandler.obtainMessage(Constants.MESSAGE_VIDEO, os).sendToTarget();
                     Thread.sleep(100);
 
                     is.close();
